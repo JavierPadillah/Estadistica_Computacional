@@ -66,7 +66,7 @@ Posterior, se generó una función que convierte cada path en un tibble.
 
 ```{r}
 # Path del folder donde se encuentran los archivos a descargar en R. (datos)
-folder_path <- "Datos y R script"
+folder_path <- "Datos_crudos"
 
 # Encontrar todos los archivos dentro de la carpeta:
 lista_archivos <- list.files(path = folder_path, recursive = TRUE, full.names = TRUE)
