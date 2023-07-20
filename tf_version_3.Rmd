@@ -69,7 +69,7 @@ David Pérez C.
 **Objetivo de estudio:**
 
 
-Realizar una caracterización de los 81 cantones de Costa Rica, utilizando información sobre precipitación lluviosa obtenida de la base CHIRPS (Climate Hazards Group InfraRed Precipitation with Station) en el periodo de 1981 a 2020 (40 años) mediante un análisis de componentes principales con la herramienta de RStudio.
+Realizar una caracterización de los 81 cantones de Costa Rica, utilizando información sobre precipitación lluviosa obtenida de la base CHIRPS (Climate Hazards Group InfraRed Precipitation with Station) en el periodo de 1981 a 2020 (40 años) mediante un análisis de componentes principales (PCA) con la herramienta de RStudio.
 
 <br>
 
@@ -84,14 +84,14 @@ De los varios SPE disponibles, CHIRPS (Funk et al. 2015) fue elegido en este est
 
 Esto permite el análisis de sequías y alimentos en lugares con topografía compleja, sistemas de precipitación convectiva profunda y redes de observación escasas y distribuidas de manera desigual (Funk et al. 2015; Rivera et al. 2018). Estudios previos han evaluado CHIRPS en regiones particulares (Awange et al. 2019 y Ocampo-Marulanda et at. 2022.)
 
-La validación de la SPE con conjuntos de datos observados generalmente se ha realizado considerando métricas por pares como el coeficiente de correlación (CC), el sesgo y el error cuadrático medio (RMSE) (Awange et al. 2019). Sin embargo, estas métricas no brindan información sobre qué tan bien el SPE evalúa la variabilidad espaciotemporal de las precipitaciones. Por ello, el análisis de componentes principales (PCA, por sus siglas en inglés), la cual es una herramienta ampliamente utilizada para identificar los modos dominantes de variabilidad climática en estudios climáticos (Dyer 1975; Malmgren y Winter 1999; Compagnucci y Richman 2008; Hsu y Li 2010), se utilizó en este estudio. Además, el PCA ayuda a identificar y cuantificar las estructuras espaciales de variabilidad correlacionada en conjuntos de datos hidro-climáticos y su evolución temporal. Según Li et al. (2011, 2013), el PCA es una herramienta útil en la evaluación de la efectividad de un conjunto de datos para describir la variabilidad espacial y temporal a gran escala, a diferencia de las comparaciones a nivel de píxel por ejemplo, donde no se evalúa adecuadamente. Los resultados del PCA pueden utilizarse posteriormente para establecer relaciones con mecanismos climáticos a gran escala. Como herramienta para evaluar el SPE, ha sido utilizada previamente por Awange et al. 2019 y Ocampo-Marulanda et at. 2022.
+La validación de la SPE con conjuntos de datos observados generalmente se ha realizado considerando métricas por pares como el coeficiente de correlación (CC), el sesgo y el error cuadrático medio (RMSE) (Awange et al. 2019). Sin embargo, estas métricas no brindan información sobre qué tan bien el SPE evalúa la variabilidad espaciotemporal de las precipitaciones. Por ello, el análisis de componentes principales (PCA, por sus siglas en inglés), la cual es una herramienta ampliamente utilizada para identificar los modos dominantes de variabilidad climática en estudios climáticos (Dyer 1975; Malmgren y Winter 1999; Compagnucci y Richman 2008; Hsu y Li 2010), se utilizó en este estudio. Además, el PCA ayuda a identificar y cuantificar las estructuras espaciales de variabilidad correlacionada en conjuntos de datos hidro-climáticos y su evolución temporal. Según Li et al. (2011, 2013), el PCA es una herramienta útil en la evaluación de la efectividad de un conjunto de datos para describir la variabilidad espacial y temporal a gran escala, a diferencia de las comparaciones a nivel de píxel por ejemplo, donde no se tiene una evaluacion adecuada. Los resultados del PCA pueden utilizarse posteriormente para establecer relaciones con mecanismos climáticos a gran escala; como herramienta para evaluar el SPE, ha sido utilizada previamente por autores tales como Awange et al. 2019 y Ocampo-Marulanda et at. 2022.
 
 <br>
 
-**Importancia del estudio**
+**Importancia del estudio:**
 
 
-Los hallazgos obtenidos a través de este análisis tienen el potencial de ser de gran relevancia para diversas áreas, desde la agricultura y la gestión del agua, hasta la prevención de desastres naturales. Además, podrían proporcionar una base sólida para futuras investigaciones en el campo de la climatología, nutriendo así el conocimiento científico y contribuyendo a la toma de decisiones informadas en temas ambientales y sociales.
+Los hallazgos obtenidos a través de este análisis tienen el potencial de ser de gran relevancia para diversas áreas, desde la agricultura y la gestión del agua, hasta la prevención de desastres naturales. Asimismo, podrían proporcionar una base sólida para futuras investigaciones en el campo de la climatología, nutriendo el conocimiento científico y contribuyendo a la toma de decisiones informadas en temas de importancia ambienta y social.
 
 <br>
 
@@ -198,7 +198,7 @@ datos_chirps_cr <- datos_chirps_cr %>%
     
 <br>
 
-A continuación se realiza un análisis exploratorio y descriptivo de los datos, para la mejor comprensión y revelación de patrones en la información que alojan el conjunto de datos. En el presente artículo, nos enfocamos en estudiar minuciosamente los datos de precipitación recopilados durante el período de 40 años, desde enero de 1981 hasta diciembre de 2020, en los 81 cantones de Costa Rica. Estos datos, obtenidos a través de la fuente "chirps," representan una valiosa fuente de información climática que nos permite adentrarnos en los patrones de lluvia a lo largo del tiempo.  
+A continuación se realiza un análisis exploratorio y descriptivo de los datos, para la mejor comprensión y revelación de patrones en la información que alojan el conjunto de datos. En el presente estudio, nos enfocamos en caracterizar minuciosamente los datos de precipitación recopilados durante el período de 40 años, desde enero de 1981 hasta diciembre de 2020, de los 81 cantones de Costa Rica. Estos datos, obtenidos a través de la base "CHIRPS" representan una valiosa fuente de información climática que nos permite adentrarnos en los patrones de lluvia a lo largo del tiempo.  
 
 El objetivo de esta sección es examinar a fondo estos datos, presentando tablas y gráficos que ilustran los promedios mensuales y anuales, desviaciones estándar, así como los valores máximos y mínimos de precipitación. Este análisis nos permitirá revelar tendencias notables, patrones estacionales y posibles cambios en el régimen de lluvias a lo largo de las últimas cuatro décadas.  
 
@@ -271,7 +271,7 @@ menor_mensual
 
 <br>
 
-De forma similar se obtiene los valores de precipitación promedio para cada año evaluado. En el siguiente Cuadro 3, se muestran de mayor a menor los 10 años con las mayor cantidad promedio mensual de precipitación (mm).
+De forma similar se obtiene los valores de precipitación promedio para cada año evaluado. En el Cuadro 3, se muestran de mayor a menor los 10 años con las mayor cantidad promedio mensual de precipitación (mm).
 
 ```{r}
 # Se obtiene el promedio de precipitación en los cantones por año. Y se obtiene los años con más y menos lluvias:
@@ -320,7 +320,7 @@ menores_anual
 
 <br>
 
-En el siguiente Gráfico 1, se muestran, en un gráfico de barras, los años en evaluación con su respectiva precipitación mensual promedio (mm).
+En el Gráfico 1, se muestran los años en evaluación con su respectiva precipitación mensual promedio (mm).
 
 <br>
 
@@ -359,8 +359,8 @@ ggplot(data = mean_by_year, aes(x = Año, y = Promedio)) +
 
 <br>
 
-Luego, en el siguiente Gráfico 2. se presentan los promedios de precipitación mensuales de los 81 cantones de Costa Rica. En este se puede apreciar que los meses más lluviosos son octubre, septiembre y mayo, con precipitaciones promedio de 416.5 mm, 364.2 mm, y 319.4 mm respectivamente.   
-Mientras que los meses menos lluviosos son enero, marzo y febrero, con precipitaciones promedio de 76.3 mm, 48.2 mm, y 42.9 mm respectivamente.  
+Luego, en el Gráfico 2, se presentan los promedios de precipitación mensuales de los 81 cantones de Costa Rica. En este se puede apreciar que los meses más lluviosos son octubre, septiembre y mayo, con precipitaciones promedio de 416.5 mm, 364.2 mm, y 319.4 mm, respectivamente.   
+Mientras que los meses menos lluviosos son enero, marzo y febrero, con precipitaciones promedio de 76.3 mm, 48.2 mm, y 42.9 mm, respectivamente.  
 
 <br>
 
@@ -464,7 +464,7 @@ dim(muy_altas_cor)
 
 En cuanto a las correlaciones entre las variables a analizar las cuales en este estudio son los 81 cantones de Costa Rica, es decir, se cuenta con 81 variables para las cuales se puede evaluar si se encuentran correlacionadas o no.
 
-Se encontró que, en generar las correlaciones entre la cantidad de precipitación de los cantones es muy alta. En el siguiente Cuadro X5. se muestra algunas de las altas correlaciones entre cantones.
+Se determinó que, en general las correlaciones entre la cantidad de precipitación de los cantones es muy alta. En el Cuadro X, se muestra algunas de las altas correlaciones entre cantones.
 
 ```{r}
 cuadro_corr <- datos_chirps_cr |> dplyr::select('TIBAS', 'CURRIDABAT', 'SAN JOSE', 'GOICOECHEA', 'ASERRI', 'ACOSTA',  'FLORES', 'BELEN', 'OROTINA', 'SAN MATEO')
@@ -483,7 +483,7 @@ corr_cuadro |> gt() |>
 
 <br>
 
-Mientras que, parejas de cantones como Matina y Carrillo; o Siquirres y Carrillo, presentan una baja correlaciones en cuanto a la cantidad de precipitación mensual, con correlaciones iguales a 0.012 y 0.022 respectivamente.
+Mientras que, parejas de cantones como Matina y Carrillo; o Siquirres y Carrillo, presentan una baja correlaciones en cuanto a la cantidad de precipitación mensual, con correlaciones iguales a 0.012 y 0.022, respectivamente.
 
 
 <br>
