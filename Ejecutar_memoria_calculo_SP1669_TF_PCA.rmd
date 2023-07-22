@@ -1,0 +1,899 @@
+---
+title: "Integrantes"
+author: 
+  - Jesús Molina
+  - Natali Mora
+  - Javier Padilla
+  - David Pérez
+output: 
+  html_document:
+    theme: flatly
+    highlight: tango
+    includes:
+      in_header:
+      - Imagenes/Portada.html
+      
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE, 
+  fig.align = 'center',
+  fig.retina = 2,
+  fig.width = 8,
+  out.width = '100%',
+  fig.asp = 0.63
+  )
+
+```
+
+## {.tabset .tabset-fade}
+
+### Introducción
+
+Los datos de precipitación proporcionan información importante sobre la variabilidad, cambio climático y la disponibilidad de agua en una región, por ejemplo. Es muy importante, caracterizar en detalle los cambios que se dan en esta variable atmosférica a diferentes escalas. Ya que la variación estacional de la precipitación tiene considerables implicaciones en diferentes actividades tales como prevención de sequías e inundaciones, agricultura, pesca y ganadería (Waylen et al., 1996). Por esto tener un conocimiento detallado del comportamiento de la lluvia, en términos de variabilidad espacio-temporal, permitirá mejorar la planificación estratégica de las actividades, relacionadas con la gestión de los recursos hídricos y los impactos de los eventos hidro-climáticos extremos (Awange et al., 2019). 
+
+Por lo general, las estaciones meterológicas en superficie son las fuentes principales de datos de variables atmosféricas, pero en muchas locaciones los presupuestos designados al monitoreo del clima son escasos, en otros casos la red de estaciones se encuentra distribuida de manera no uniforme. Otra limitante en la toma de los datos meteorológicos es que los registros históricos en muchas ocasiones contienen muchos valores faltantes, debido a fallas en los sensores o falta de mantenimiento a los mismo. Estas condiciones dificultan tener un adecuado set de datos para realizar análisis hidro-climatológico, lo que repercute en la toma de decisiones a gestores de emergencias, en campos hidrológicos y agrícolas por ejemplo (Ocampo-Marulanda et at., 2022).
+
+Gracias a los nuevos avances tecnológicos, estas limitantes de datos se pueden solventar con la ayuda de estimaciones de precipitación por satélite, ya que brindan una amplia cobertura, alta resolución espacial y temporal, muestreo continuo y son de fácil acceso (Rivera et al., 2018). Sin embargo, Satgé et al. (2019) realizaron una evaluación basada en sensores pluviométricos y destacaron la variabilidad espacial de la eficiencia de observaciones satelitales en la reproducción de la precipitación.
+
+Entre los recursos disponibles para la descarga de datos de precipitación mundial diaria se encuentra CHIRPS (Climate Hazards Group InfraRed Precipitation with Station data; Funk et al., 2015). Esta base de datos ofrece una cobertura casi global y un largo historial de datos (desde 1981 hasta la actualidad), lo que la hace adecuada para estudiar la variabilidad espacio-temporal de las precipitaciones en regiones con cobertura limitada de datos, con topografía compleja, o sistemas de precipitación convectiva profunda (Funk et al., 2015; Rivera et al., 2018). 
+
+Implementando el Análisis de Componentes Principales (PCA, por sus siglas en inglés), para identificar los modos dominantes de variabilidad climática en estudios climáticos investigaciones como la de Loaiza et al. (2020) muestra que CHIRPS describe la mayor parte de la variabilidad de la lluvia observada en la cuenca de la Plata, Sur América, pero tiene más variabilidad dependiendo de las estaciones analizadas. Ocampo-Marulanda et al. (2022) utilizaron Componentes Principales Combinados (CPC) para determinar la relación con la Temperatura Superficial del Mar (SST) a través de mapas de correlación lineal simultánea. Los resultados validan que CHIRPS puede incluirse en estudios posteriores de la dinámica espaciotemporal de las lluvias en el suroeste de Colombia. 
+
+Además, el PCA ayuda a identificar y cuantificar las estructuras espaciales de variabilidad correlacionada en conjuntos de datos hidro-climáticos y su evolución temporal. Según Li et al. (2011, 2013), el PCA es una herramienta útil en la evaluación de la efectividad de un conjunto de datos para describir la variabilidad espacial y temporal a gran escala, a diferencia de las comparaciones a nivel de píxel por ejemplo, donde no se evalúa adecuadamente. 
+
+Tomando esto en consideración, **el objetivo** de este trabajo es identificar meses lluviosos y secas, así como regiones con similar comportamiento en la variable meteorológica precipitación, en 81 cantones de Costa Rica. Esto utilizando los datos de precipitación, de la base CHIRPS en el periodo de 1981 a 2020, mediante un análisis de componentes principales con la herramienta de RStudio.
+
+
+### Datos
+
+En la elaboración de este trabajo se utilizó el acumulado mensual de datos de precipitación de 81 puntos, correspondientes a los 81 cantones de Costa Rica, durante el periodo 1981-2020 (40 años), cumpliendo así con el registro mínimo de extensión (30 años), recomendado por la OMM (1989), para estadísticas confiables. El mapa a continuación presenta la distribución espacial de los lugares estudiados. 
+
+<center>
+
+![](imagenes/costarica_cantones.png){width="60%"}
+</center>
+
+La precipitación fue obtenida de la base de datos CHIRPS (Funk et al., 2015), que se genera a partir de técnicas de interpolación de imágenes satélites y datos de estaciones in situ para crear series de tiempo de lluvia cuadriculadas, esto para caracterizar ubicaciones geográficas con pocos o datos nulos. CHIRPS ofrece información de precipitación global entre latitudes de 50°S a 50°N, de descarga libre y gratuita con resoluciones temporales diarias, cada 2 meses, cada 3 meses y bajo formatos georeferenciados BIL, TIF o NetCDF. Los datos están disponibles en el sitio web [https://www.chc.ucsb.edu/data/chirps](https://www.chc.ucsb.edu/data/chirps).
+
+La resolución espacial de CHIRPS es de 0.05° (alrededor de 5 km) y para este trabajo se utilizó un formato de descarga de NetCDF con resolución temporal de un día, lo que permitió calcular las estimaciones mensuales de lluvia para cada cantón. Para la extracción y procesamiento de los datos, se utilizó el software R. Con el paquete Raster y utilizando el shapefile cantonal de Costa Rica, se buscó el punto en la rejilla de CHIRPS más cercano a la posición geográfica del centroide del cantón. El resultado final consiste en un archivo con los valores mensuales de precipitación para cada uno de los 81 cantones de Costa Rica. 
+
+    
+0. En siguiente código se presenta como se realizó el proceso de extracción de los puntos de rejilla.
+
+
+    ```{r, eval=FALSE}
+    if (max(.packages(all.available = TRUE) == "raster") == 0) {
+      install.packages("raster", dependencies = TRUE)
+    }
+    
+    # Carga del paquete
+    suppressWarnings(suppressMessages(library(raster)))
+    
+    poligono <-
+      st_read("Cantonescr/5894e940-8455-4376-a1bc-ab05875cd4092020329-1-vyv616.0a2l.shp")
+    
+    files <- list.files(path = "Datos_crudos/",
+                        pattern = "(.nc$)",
+                        recursive = TRUE)
+    
+    all_files = paste0("Datos_crudos/", files)
+    
+    create_data <- function(y) {
+      ext <- tools::file_ext(y)
+      
+      if (ext == "nc") {
+        prueba <- brick(y, varname = "precip")
+      }
+      
+      else{
+        stop("Extension no permitida")
+      }
+      
+      #Extrae los datos para el poligo creado
+      datos <- raster::extract(prueba, poligono, fun = mean, na.rm = T)
+      datos2 <- data.frame(t(datos))
+    }
+    
+    Table <- all_files %>% map_df(create_data)
+    (Table)
+    ``` 
+    
+### Método
+
+El análisis de componentes principales (PCA) puede ser útil para explorar conjuntos multivariados de datos, tales como el caso de los campos de variables geofísicas. Esto debido a que tiene el potencial para generar percepciones en cuanto a la variación espacial y temporal de los campos analizados y por lo tanto pueden sugerirse nuevas interpretaciones de la información, producto de la naturaleza de las principales combinaciones lineales generadas (Wilks, 2006). El PCA reduce un conjunto de datos que contiene una gran cantidad de variables a un conjunto de datos que contiene menos y nuevas variables (Wilks, 2006). Estas nuevas variables son combinaciones lineales de las originales, y estas combinaciones lineales se eligen para representar la máxima fracción posible de la variabilidad contenida en los datos originales.
+
+Es decir, dadas múltiples observaciones $(K×1)$ de un vector de datos $x$, PCA encuentra $(M×1)$ vectores $u$ cuyos elementos son combinaciones lineales de los elementos de las $xs$, que contienen la mayor parte de la información en la colección original de $xs$. Los elementos de estos nuevos vectores $u$ se denominan componentes principales (PC). Amat (2020) menciona que para poder aplicar esta técnica, las variables del conjunto de datos deben tener una alta correlación para crear una serie de variables nuevas que no tienen correlación.
+
+Cada PC explica una proporción de la variabilidad total y ésta se calcula mediante el cociente entre el valor propio y la traza de la matriz de covarianza. Cada uno de ellos es la combinación lineal de las respuestas que explican la posición i–ésima más grande de la variabilidad total.
+
+Para cada componente, se obtiene la ecuación 1:
+
+\begin{equation}
+\tag{1}
+z_i=a_{11}x_{i1}+a_{12}x_{i2}+...+a_{1p}x_{ip}
+\end{equation}
+
+La primer componente principal se calcula a partir de la combinación lineal de las variables originales con variancia máxima, dando como resultado que la ecuación de la primera componente corresponde a $z_1=Xa_1$
+
+Luego, se procede a estimar la variancia de $z_1$ como muestra la ecuación 2: 
+
+\begin{equation}
+\tag{2}
+\frac{1}{n}(z^\prime_1z_1) =\frac{1}{n}a^\prime_1 (X^\prime Xa_1) =a^\prime_1Sa_1$
+\end{equation}
+
+donde S es la matriz de variancia y covariancias de las observaciones. Para poder resolver esta maximización, se impone la restricción de que $a^\prime_1a_1=1$, la cual se incluye mediante un multiplicador de Lagrange:
+
+\begin{equation}
+\tag{3}
+$M=a^\prime_1Sa_1-\lambda(a^\prime_1a_1-1)$ 
+\end{equation}
+
+Se busca derivar la ecuación 3 con respecto a $a_1$ e igualando a cero, obteniendo la solución de la ecuación 4:
+
+\begin{equation}
+\tag{4}
+Sa_1=\lambda a_1
+\end{equation}
+
+lo cual indica que si se multiplica al lado izquierdo por de la ecuación 4 $a^\prime_1$ se obtiene que $\lambda$ es la varianza de $z_1$.
+
+Se analizó la matriz de correlaciones para conocer la existencia o no de multicolinealidad entre las variables. Además de calculó el índice Kaiser-Meyer-Olkin (KMO) para identificar si era viable o no aplicar un PCA en nuestra set de datos. La medida de esta índice fue interpretada con las siguientes directrices: KMO > 0.9 muy bueno, 0.90 > KMO > 0.80 bueno, 0.80 > KMO > 0.70 aceptable, 0.70 > KMO > 0.60 regular, 0.60 > KMO > 0.50 malo, KMO < 0.5 muy malo, no se recomienda un PCA. Una vez analizada esta información se procede con el PCA, el número de componentes se determinó mediante el gráfico de sedimentación, para lo cual se identifica el punto de inflexión o codo en la curva del gráfico para a partir de ahí seleccionar las componentes principales.
+
+### Análisis Exploratorio y Descriptivo
+
+A continuación se realiza un análisis exploratorio y descriptivo de los datos, para la mejor comprensión e identificación de patrones lluviosos con la información que aloja el conjunto de datos.
+
+Se presentan tablas y gráficos que ilustran los promedios mensuales y anuales, desviaciones estándar, así como los valores máximos y mínimos de la precipitación, con el objetivo de observar si existen, patrones estacionales, cambios en el régimen de lluvias a lo largo de las últimas cuatro décadas o diferencias regionales entre los distintos cantones, con el fin de comprender un poco más el clima en Costa Rica.
+
+1.  Cargue los paquetes que vaya a utilizar en el análisis.
+
+    ```{r results='hide', message=FALSE}
+    local({
+      r <- getOption("repos")
+      r["CRAN"] <- "http://cran.r-project.org"
+      options(repos = r)
+    })
+    
+if (max(.packages(all.available = TRUE) == "here") == 0) {
+  install.packages("here", dependencies = TRUE)
+}
+
+# Carga del paquete here
+suppressWarnings(suppressMessages(library(here)))
+
+if (max(.packages(all.available = TRUE) == "lubridate") == 0) {
+  install.packages("lubridate", dependencies = TRUE)
+}
+
+# Carga del paquete
+suppressWarnings(suppressMessages(library(lubridate)))
+
+if (max(.packages(all.available = TRUE) == "corrplot") == 0) {
+  install.packages("corrplot", dependencies = TRUE)
+}
+
+# Carga del paquete
+suppressWarnings(suppressMessages(library(corrplot)))
+
+if (max(.packages(all.available = TRUE) == "DT") == 0) {
+  install.packages("DT", dependencies = TRUE)
+}
+
+# Carga del paquete
+suppressWarnings(suppressMessages(library(DT)))
+
+if (max(.packages(all.available = TRUE) == "tidyverse") == 0) {
+  install.packages("tidyverse", dependencies = TRUE)
+}
+
+# Carga del paquete
+suppressWarnings(suppressMessages(library(tidyverse)))
+
+if (max(.packages(all.available = TRUE) == "readxl") == 0) {
+  install.packages("readxl", dependencies = TRUE)
+}
+
+# Carga del paquete
+suppressWarnings(suppressMessages(library(readxl)))
+
+if (max(.packages(all.available = TRUE) == "xtable") == 0) {
+  install.packages("xtable", dependencies = TRUE)
+}
+
+# Carga del paquete
+suppressWarnings(suppressMessages(library(xtable)))
+
+if (max(.packages(all.available = TRUE) == "kableExtra") == 0) {
+  install.packages("kableExtra", dependencies = TRUE)
+}
+
+# Carga del paquete
+suppressWarnings(suppressMessages(library(kableExtra, warn.conflicts = FALSE)))
+
+if (max(.packages(all.available = TRUE) == "gt") == 0) {
+  install.packages("gt", dependencies = TRUE)
+}
+
+# Carga del paquete
+suppressWarnings(suppressMessages(library(gt)))
+
+if (max(.packages(all.available = TRUE) == "tibble") == 0) {
+  install.packages("tibble", dependencies = TRUE)
+}
+
+# Carga del paquete
+suppressWarnings(suppressMessages(library(tibble)))
+
+if (max(.packages(all.available = TRUE) == "openxlsx") == 0) {
+  install.packages("openxlsx", dependencies = TRUE)
+}
+
+# Carga del paquete
+suppressWarnings(suppressMessages(library(openxlsx)))
+
+if (max(.packages(all.available = TRUE) == "reshape2") == 0) {
+  install.packages("reshape2", dependencies = TRUE)
+}
+
+# Carga del paquete
+suppressWarnings(suppressMessages(library(reshape2)))
+
+if (max(.packages(all.available = TRUE) == "psych") == 0) {
+  install.packages("psych", dependencies = TRUE)
+}
+
+# Carga del paquete
+suppressWarnings(suppressMessages(library(psych)))
+
+    ```
+
+2. El siguiente código lee y guarda los paths de todos los archivos que se encuentran dentro del folder indicado (`folder_path`).
+
+    ```{r}
+    # Path del folder donde se encuentran los archivos para trabajar.
+    folder_path <- here("Datos_chirps")
+    
+    # Encontrar todos los archivos dentro de la carpeta:
+    lista_archivos <-
+      list.files(path = folder_path,
+                 recursive = TRUE,
+                 full.names = TRUE)
+    
+    # Función para convertir los paths a tablas tipo tibble
+    combertir_a_tibble <- function(path) {
+      if (endsWith(path, ".csv")) {
+        tabla_a <- read_csv(path, show_col_types = FALSE)
+      } else if (endsWith(path, ".xlsx")) {
+        tabla_a <- read_excel(path)
+      } else if (endsWith(path, ".tsv")) {
+        tabla_a <- read_tsv(path, show_col_types = FALSE)
+      } else if (endsWith(path, ".jpg")) {
+        "borrar esta entrada"
+      } else {
+        nombre_archivo <- sub(".*/([^/]+)\\.[^/.]+$", "\\1", path)
+        warning1 <- paste0("WARNING: hay un archivo en formato erroneo.
+                        Con el nombre ",
+                        nombre_archivo)
+        warning(warning1)}
+    }
+    ```
+
+3. Se llama la función creada `combertir_a_tibble` para cada path dentro de la lista 'lista_archivos' con la ayuda de la función `map`, que convierte cada path en un tibble. 
+
+    ```{r}
+    tibble_list <- map(lista_archivos, ~ {
+      combertir_a_tibble(.)})
+    ```    
+    
+    ```{r}
+    length(tibble_list)
+    class(tibble_list)
+    ```
+
+    ```{r}
+    datos_chirps_cr <- tibble_list[[1]]
+    ```
+
+4. Convierte los datos en datos numéricos.
+
+    ```{r}
+    datos_chirps_cr <- datos_chirps_cr %>%
+                  mutate(across(where(is.character), as.numeric))
+    ```
+
+5. Se obtienen las precipitaciones anuales.
+
+    ```{r}
+    datos_chirps_cr |> group_by(Year) |>
+      dplyr::summarise(across(everything(), mean)) -> datos_by_year
+    ```
+
+    ```{r}
+    datos_chirps_cr |> group_by(Month) |>
+      dplyr::summarise(across(everything(), mean)) -> mean_by_month
+    ```
+    
+    ```{r}
+    cantones <- datos_chirps_cr |> dplyr::select(c(-1,-2)) |> names()
+    cantones
+    ``` 
+
+6. Promedios y desviación estándar mensual, para cada cantón.
+
+    -   Solo se presentan los cantones con valores promedios de precipitación mínimos y máximos.
+    -   En el Cuadro 1 se presentan los 10 cantones que obtuvieron los máximos valores promedios mensuales de precipitación (mm) ordenados de mayor a menor y junto con sus respectivas desviaciones estándar.
+    -   En el Cuadro 2 se presentan los 10 cantones con los valores mínimos de precipitación promedio, ordenados de igual forma.
+
+    ```{r}
+    means <- apply(datos_chirps_cr[, 3:83], MARGIN = 2, mean)
+    desve <- apply(datos_chirps_cr[, 3:83], MARGIN = 2, sd)
+    promedios <- data.frame(Cantones = cantones,
+      Promedios = round(means, 2),
+      Desv_Est = round(desve))
+    rownames(promedios) <- NULL
+    ```
+    
+7. Cantones con los valores mensuales máximos de precipitación.
+
+    ```{r }
+    top_mensual <-
+      promedios |> arrange(desc(Promedios)) |> top_n(10) |> gt() |>
+      tab_header(
+        title = md('**Cuadro 1.**<br> Cantones con los promedios máximos 
+                   mensuales de precipitación')) |>
+      tab_source_note(source_note = 'Fuente: Datos obtenidos de CHIRPS, 2022') |>
+      cols_label(Desv_Est = 'Desv. Est.') |>
+      tab_options(table.align = "center",
+        heading.align = "left",
+        table.font.size = 11)
+
+    top_mensual
+    ```
+
+<br>  
+
+8. Cantones con los promedios mínimos mensuales de precipitación.
+
+    ```{r}
+    menor_mensual <-
+      promedios |> arrange(desc(Promedios)) |> tail(10) |> gt()
+    menor_mensual <- menor_mensual |> tab_header(
+      title = md('**Cuadro 2.**<br> Cantones con los promedios mínimos
+                 mensuales de precipitación')) |>
+      tab_source_note(source_note = 'Fuente: Datos obtenidos de CHIRPS, 2022') |>
+      cols_label(Desv_Est = 'Desv. Est.') |>
+      tab_options(
+        table.align = "center",
+        heading.align = "left",
+        table.font.size = 11)
+    menor_mensual
+    ```
+
+<br>
+
+9.  Precipitación promedio para cada año. 
+
+    -   El Cuadro 3, muestra de mayor a menor los 10 años con el promedio mensual de precipitación (mm).
+
+    ```{r}
+    means_yr <- apply(datos_by_year[, 3:83], MARGIN = 1, mean)
+    sd_yr <- apply(datos_by_year[, 3:83], MARGIN = 1, sd)
+    
+    mean_by_year <- data.frame(
+      Año = datos_by_year$Year,
+      Promedio = round(means_yr, 2),
+      Est_Dev = round(sd_yr, 2))
+    ``` 
+
+    ```{r}
+    top_anual <-
+      mean_by_year |> arrange(desc(Promedio)) |> top_n(10) |> gt()
+    top_anual <- top_anual |> tab_header(
+      title = md(
+        '**Cuadro 3.**<br> Promedios máximos de precipitación mensual para 81 cantones de Costa Rica de acuerdo con el año'
+      )) |>
+      tab_source_note(source_note = 'Fuente: Datos obtenidos de CHIRPS, 2022') |>
+      cols_label(Est_Dev = 'Desv. Est.') |>
+      tab_options(
+        table.align = "center",
+        heading.align = "left",
+        table.font.size = 11)
+    top_anual
+    ``` 
+<br>
+
+10. En el Cuadro 4, se muestran de mayor a menor los 10 años con los menores promedios mensuales de precipitación (mm).
+
+    ```{r}
+    menores_anual <-
+      mean_by_year |> arrange(desc(Promedio)) |> tail(10) |> gt()
+    menores_anual <- menores_anual |> tab_header(
+      title = md(
+        '**Cuadro 4.**<br> Promedios mínimos de precipitación mensual para 81  cantones de Costa Rica de acuerdo con el año')) |>
+      tab_source_note(source_note = 'Fuente: Datos obtenidos de CHIRPS, 2022') |>
+      cols_label(Est_Dev = 'Desv. Est.') |>
+      tab_options(
+        table.align = "center",
+        heading.align = "left",
+        table.font.size = 11)
+    menores_anual
+    ``` 
+
+    ```{r eval=FALSE, include=TRUE, fig.align='left', out.height='400px', out.width='900px'}
+    
+    ggplot(data = mean_by_year, aes(x = Año, y = Promedio)) +
+      geom_bar(stat = "identity", fill = "darkblue") +
+      geom_text(aes(label = round(Promedio, 0)),
+        vjust = -0.5,color = "grey6",
+        size = 2) +
+      labs( title = "**Gráfico 1.** <br> Promedio de la precipitación mensual para 81 cantones de Costa Rica de acuerdo con el año",
+        x = "Año",
+        y = "Precipitacion (mm)",
+        caption = "Fuente: Datos obtenidos de CHIRPS, 2022") +
+      scale_x_continuous(breaks = mean_by_year$Año,
+                         labels = mean_by_year$Año) +
+      theme(axis.text.x = element_text(
+        angle = 45,
+        vjust = 0.5,
+        hjust = 1))
+    ```
+    
+11. En el Gráfico 1, se muestra, los años vs la precipitación promedio mensual en mm.
+
+    ```{r echo=FALSE, fig.align='center', out.width='900px', out.height='400px'}
+    ggplot(data = mean_by_year, aes(x = Año, y = Promedio)) +
+      geom_bar(stat = "identity", fill = "darkblue") +
+      geom_text(
+        aes(label = round(Promedio, 0)),
+        vjust = -0.5,
+        color = "grey6",
+        size = 2) +
+      labs( title = "",
+        x = "Año",
+        y = "Precipitación (mm)",
+        caption = "Fuente: Datos obtenidos de CHIRPS, 2022") +
+      scale_x_continuous(breaks = mean_by_year$Año,
+                         labels = mean_by_year$Año) +
+      theme(axis.text.x = element_text(
+        angle = 90,
+        vjust = 0.5,
+        hjust = 1)) 
+    ```
+
+<center> **Gráfico 1: **Promedio de la precipitación mensual para los cantones de Costa Rica de acuerdo con el año </center>
+<br>
+
+12. El Gráfico 2, se presentan los promedios de precipitación mensuales de los 81 cantones de Costa Rica. 
+
+    -  Se obtiene el promedio para cada mes.
+
+    ```{r}
+    means_mes <- apply(mean_by_month[, 3:83], MARGIN = 1, mean)
+    promedios_mensuales <- data.frame(Mes = mean_by_month$Month,
+                                      Promedio = round(means_mes, 1))
+    promedios_mensuales
+    ```
+
+    -  Meses con los promedios anuales mayores de precipitación.
+    
+    ```{r}
+    head(arrange(promedios_mensuales, desc(means_mes)), 4)
+    ```
+    
+    -  Meses con los promedios anuales menores de precipitación.
+    
+    ```{r}
+    tail(arrange(promedios_mensuales, desc(means_mes)), 4)
+    ```
+
+    - Nombre del mes en letras en vez de en números con `lubridate`
+    
+    ```{r}
+    Sys.setlocale("LC_TIME", "es_ES.UTF-8")
+    promedios_mensuales$mes_nombre <-
+      lubridate::month(promedios_mensuales$Mes,
+                       label = T)
+    ```
+ 
+     -  Observe en el Gráfico 2 que los meses más lluviosos son octubre, septiembre y mayo, con precipitaciones promedio de 416.5 mm, 364.2 mm, y 319.4 mm respectivamente. 
+     
+    -   Los meses menos lluviosos son enero, marzo y febrero, con precipitaciones promedio de 76.3 mm, 48.2 mm, y 42.9 mm respectivamente.  
+    
+    ```{r eval=FALSE, include=TRUE, fig.align='left', out.width='850px', out.height='450px'}
+     
+    ggplot(data = promedios_mensuales, aes(x = mes_nombre, y = Promedio)) +
+      geom_bar(stat = "identity", fill = "skyblue") +
+      geom_text(aes(label = round(Promedio, 0)),
+        vjust = -0.5,
+        color = "black",
+        size = 2.2) +
+      labs(
+        title = "**Gráfico 2.** <br> Promedio de precipitación mensual para 81 cantones de Costa Rica",
+        x = "Mes",
+        y = "Precipitación (mm)",
+        caption = "Fuente: Datos obtenidos de CHIRPS, 2022")
+    ```
+
+    ```{r echo=FALSE, fig.align='left', out.height='450px', out.width='850px'}
+    ggplot(data = promedios_mensuales, aes(x = mes_nombre, y = Promedio)) +
+      geom_bar(stat = "identity", fill = "skyblue") +
+      geom_text(aes(label = round(Promedio, 0)),
+        vjust = -0.5,
+        color = "black",
+        size = 2.2) +
+      labs(title = "",
+        x = "Mes",
+        y = "Precipitación (mm)",
+        caption = "Fuente: Datos obtenidos de CHIRPS, 2022")+
+      theme(axis.text.x = element_text(angle = 45, hjust = 1))
+    ```
+
+<center>  **Gráfico 2.** Promedio de precipitación mensual para 81 cantones de Costa Rica </center>
+
+<br>  
+    
+13. Se obtienen las **Correlaciones entre las variables estudiadas** (precipitación mensual de cada cantón)
+
+    -  Observe las correlaciones débiles entre las ubicaciones en la Costa Caribe y      las demás regiones del país en el Gráfico 3.
+
+    ```{r}
+    datos_numericos <- datos_chirps_cr |> dplyr::select(c(-1,-2))
+    
+    corr_1 = cor(datos_numericos)
+    
+    corrplot(cor(datos_numericos[, c(1, 10, 14, 38, 39, 41, 57, 79, 
+                  31, 40, 51, 28, 7, 3, 26, 24, 22,48)]), 
+             tl.cex = 0.6, cl.cex =0.7)
+    ```
+<center> **Gráfico 3: ** Correlación lineal entre las estaciones. </center>
+    
+     
+    ```{r}
+    which(corr_1 < -0.5 &
+            corr_1 > -0.99, arr.ind = TRUE)
+    ```
+
+     -   La mínima correlación es de 0.01197.
+     
+    ```{r}
+    min(corr_1)
+    ```    
+    
+     -   Pareja de cantones con bajas correlaciones (19 parejas de cantones con correlaciones menores a 0.1).
+     
+    ```{r}
+    bajas_cor <-
+      which(corr_1 < 0.1 & corr_1 > 0, arr.ind = TRUE) ## Bajas corr
+    dim(bajas_cor)
+    corr_1[c(15, 38, 41), c(15, 38, 41)]
+    ```
+
+     -   Cantidad de correlaciones entre 0.9 y 1 (1441 parejas de cantones con correlaciones mayores a 0.9).
+     
+    ```{r}
+    altas_cor <- which(corr_1 > 0.9 & corr_1 <  1, arr.ind = TRUE)
+    dim(altas_cor)
+    ```
+
+     -   Cantidad de correlaciones entre 0.99 y 1 (57 parejas de cantones con correlaciones mayores a 0.99).
+     
+    ```{r}
+    muy_altas_cor <- which(corr_1 > 0.99 & corr_1 <  1, arr.ind = TRUE)
+    dim(muy_altas_cor)
+    ```
+
+14. Indice Kaiser-Meyer-Olkin (KMO) para identificar si es viable o no aplicar un PCA en nuestro set de datos. 
+
+    ```{r}
+    KMO(cor(datos_numericos))
+    ```
+
+  
+13. Comportamiento mensual de la lluvia para 9 cantones de Costa Rica
+
+     -   Note que las locaciones del Pacífico y Valle Central presentan máximos de lluvia entre octubre-noviembre, con una disminución relativa de la precipitación en los meses de julio-agosto.
+     
+     -  Locaciones en el Caribe, presentan condiciones lluviosas todo el año, sin embargo se presentan un período relativamente seco, entre setiembre y octubre.
+
+    ```{r echo=FALSE}
+    path_datos <- here("Datos_chirps/datos_chirps_1981-2020.Rdata")
+    
+    load(path_datos)
+
+    # Climatología
+    Rainm <- prec %>%
+      group_by(Month) %>%
+      summarise_at(.vars = colnames(.)[3:83], mean)
+    
+    Rain <- data.frame(Rainm[-1])
+
+    rownames(Rain) <- c("January",'February',
+      "March", "April", "May", "June","July",
+      "August","September", "October", "November","December")
+    ```
+    
+    ```{r, out.width="70%", fig.align="center"}
+     
+     Rain_pc <- Rainm[,c(1,2,10,14,20,23,36,28,51,54,39,41,57)]
+     Rain_pc <- melt(Rain_pc,  id.vars = 'Month', variable.name = 'station')
+     Rain_pc %>%
+       ggplot(aes(x = Month, y=value)) + geom_bar(stat="identity") +
+      facet_wrap(vars(station), ncol = 3) +
+       scale_x_continuous(breaks = c(1:12), 
+                       labels = factor(1:12))+
+      labs(x = "Month", y = "Precipitation (mm)")
+    ```   
+
+<center> **Gráfico 4: ** Ciclo anual de la precipitación en 9 cantones de Costa Rica. </center>
+
+### Análisis de Componentes Principales
+
+1.  Cargue los paquetes que vaya a utilizar en el análisis.
+
+    ```{r results='hide', message=FALSE}
+if (max(.packages(all.available = TRUE) == "readr") == 0) {
+  install.packages("readr", dependencies = TRUE)
+}
+
+# Carga del paquete
+suppressWarnings(suppressMessages(library(readr)))   
+
+if (max(.packages(all.available = TRUE) == "papeR") == 0) {
+  install.packages("papeR", dependencies = TRUE)
+}
+
+# Carga del paquete
+suppressWarnings(suppressMessages(library(papeR)))      
+ 
+if (max(.packages(all.available = TRUE) == "ggpubr") == 0) {
+  install.packages("ggpubr", dependencies = TRUE)
+}
+
+# Carga del paquete
+suppressWarnings(suppressMessages(library(ggpubr)))   
+
+if (max(.packages(all.available = TRUE) == "CCA") == 0) {
+  install.packages("CCA", dependencies = TRUE)
+}
+
+# Carga del paquete
+suppressWarnings(suppressMessages(library(CCA)))  
+
+if (max(.packages(all.available = TRUE) == "CCP") == 0) {
+  install.packages("CCP", dependencies = TRUE)
+}
+
+# Carga del paquete
+suppressWarnings(suppressMessages(library(CCP))) 
+
+if (max(.packages(all.available = TRUE) == "sf") == 0) {
+  install.packages("sf", dependencies = TRUE)
+}
+
+# Carga del paquete
+suppressWarnings(suppressMessages(library(sf)))
+
+if (max(.packages(all.available = TRUE) == "ggrepel") == 0) {
+  install.packages("ggrepel", dependencies = TRUE)
+}
+
+# Carga del paquete
+suppressWarnings(suppressMessages(library(ggrepel)))
+
+if (max(.packages(all.available = TRUE) == "factoextra") == 0) {
+  install.packages("factoextra", dependencies = TRUE)
+}
+
+# Carga del paquete
+suppressWarnings(suppressMessages(library(factoextra)))
+
+if (max(.packages(all.available = TRUE) == "FactoMineR") == 0) {
+  install.packages("FactoMineR", dependencies = TRUE)
+}
+
+# Carga del paquete
+suppressWarnings(suppressMessages(library(FactoMineR)))
+
+if (max(.packages(all.available = TRUE) == "ggpubr") == 0) {
+  install.packages("ggpubr", dependencies = TRUE)
+}
+
+# Carga del paquete
+suppressWarnings(suppressMessages(library(ggpubr)))
+
+    ```
+
+2.  Desarrolle el código necesario para recuperar la información requerida.
+
+    ```{r}
+    # load("Datos_chirps/datos_chirps_1981-2020.Rdata")  
+
+    # Climatologia
+    Rainm <- prec %>%
+      group_by(Month) %>%
+      summarise_at(.vars = colnames(.)[3:83], mean)
+    
+    Rain <- data.frame(Rainm[-1])
+
+    rownames(Rain) <- c("January",'February',
+      "March", "April", "May", "June","July",
+      "August","September", "October", "November","December")
+  
+    attach(Rain)
+    
+    head(Rain[, 1:6], 10)
+    ```
+
+1. Análisis de componentes principales
+
+    ```{r}
+     test.acp <- PCA(X = Rain,
+                    scale.unit = TRUE,
+                    graph = FALSE)
+    ```
+
+2. Selección de componentes principales
+
+     -   El gráfico de sedimentación sugiere que se deben elegir dos componentes para realizar el estudio. El codo se forma en la componente número 3. Se observa que la varianza acumulativa explicada es del 89.5% con la primera componente.
+
+    ```{r out.width="80%", fig.align="center"}
+    fviz_eig(test.acp,  title = '',addlabels = TRUE) + theme_linedraw() +
+      theme(text = element_text(size = 13),
+        axis.title = element_text(size = 13),
+        axis.text = element_text(size = 13)) +
+      theme(axis.text.x = element_text(size = 13, angle = 0),
+            axis.text.y = element_text(size = 13))+
+      theme_bw() 
+    ```    
+    
+3. Análisis de individuos
+
+     -  El plano principal muestra los meses más y menos lluviosos. 
+     Por ejemplo, setiembre y octubre corresponden a los meses más lluviosos de la   vertiente Pacífico, pero se observa una disminución de las lluvias en esos meses
+     en la vertiente Caribe. 
+
+    ```{r, out.width="70%", fig.align="center"}
+     fviz_pca_ind(
+      test.acp,
+      col.ind = "cos2",
+      title = "",
+      geom.ind = c("point", "text"),
+      ggtheme = theme(axis.text = element_text(size = 13), 
+                      axis.title = element_text(size = 13)),
+      gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+      labelsize = 4,
+      pointsize = 1,
+      repel = TRUE) +
+      theme_linedraw() +
+      theme(text = element_text(size = 13))
+    
+    ```
+
+4. Análisis de variables
+
+     -  El círculo de correlaciones muestra las correlación entre las variables (estaciones), para lo cual se analiza el ángulo que se forma entre estos. Se muestra que exite una correlación alta y positiva entre las estaciones de la región Caribe, que son explicados por la dimensión 2.
+     -  Las variables están cerca de la orilla del circulo de correlaciones, lo que indicaría que están bien representadas.
+
+    ```{r, out.width="70%", fig.align="center"}
+    fviz_pca_var(test.acp,
+             col.var = "contrib", title = "",labelsize = 2,
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+             repel = TRUE)+
+      theme_linedraw() 
+    ```
+    
+5. Variable de Contribución    
+
+    ```{r}
+     head(test.acp$var$contrib)
+    ```
+    
+6. Utilizando prcomp
+  
+    ```{r}
+    results <- prcomp(Rain, scale = TRUE)
+    head(results$rotation[, 1:3], 10)
+    EOF1 <- data.frame(results$rotation[,1])
+    
+    EOF1 <- data.frame(EOF1, nombres,latlon)
+    colnames(EOF1) <- c('pesos',"canton","lat","lon")
+    
+    EOF2 <- data.frame(results$rotation[,2])
+    EOF2 <- data.frame(EOF2, nombres,latlon)
+    colnames(EOF2) <- c('pesos',"canton","lat","lon")
+
+    ```
+
+    ```{r eval=TRUE,echo=TRUE}
+    cr_map <- sf::st_read("Cantones_de_Costa_Rica/5894e940-8455-4376-a1bc-ab05875cd4092020329-1-vyv616.0a2l.shp")
+    
+    cr_map_acp1 <- cr_map %>%
+      # unir tablas
+      left_join(EOF1,
+                # indicar explícitamente las columnas índice,
+                # necesario cuando no tienen el mismo nombre
+                by = c("NOM_CANT_1" = "canton"))
+    
+     cr_map_acp1 %>%
+      ggplot() + geom_sf() +
+      geom_point(aes(x = lon, y = lat, fill = pesos),
+        size = 2.2,
+        shape = 23 ) +
+        scale_fill_gradient(low="blue", high="red")+
+
+    labs(x=NULL,y=NULL)+
+
+      coord_sf(xlim = c(-86,-82.5),
+               ylim = c(8, 11.3),
+               expand = FALSE) +
+      theme_linedraw() +
+      theme_bw() 
+    ```  
+    
+    
+    ```{r eval=TRUE,echo=FALSE}
+    
+    cr_map_acp2 <- cr_map %>%
+      # unir tablas
+      left_join(EOF2,
+                # indicar explícitamente las columnas índice,
+                # necesario cuando no tienen el mismo nombre
+                by = c("NOM_CANT_1" = "canton"))
+    
+    cr_map_acp2 %>%
+      ggplot() + geom_sf() +
+      geom_point(aes(x = lon, y = lat, fill = pesos),
+        size = 2.2,
+        shape = 23 ) +
+      scale_fill_gradient(low="blue", high="red")+
+
+    labs(x=NULL,y=NULL)+
+
+      coord_sf(xlim = c(-86,-82.5),
+               ylim = c(8, 11.3),
+               expand = FALSE) +
+      theme_linedraw() +
+      theme_bw() 
+    ```    
+
+### Discusión
+
+El Análisis de Componentes Principales pudo identificar características de lluvia en la Costa Rica. Se determinó que gran parte de la varianza en la precipitación se puede representar de manera adecuada a partir de las dos primeras componentes, con 89.5% y 7.6% respectivamente. La primera componente principal la determina la región Pacífica y la segunda corresponde a la vertiente Caribe costarricense; quedando el comportamiento espacial de cada modo de precipitación dividido por el sistema montañoso que atraviesa al país. Estos resultados son congruentes con los resultados de Alfaro (2002), quién indicó que el régimen de precipitaciones Pacífico es considerado el dominante en el país, el cual representa el 86.7% total de la variabilidad explicada de la precipitación en América Central, mientras que el segundo régimen o Caribe apenas representa un 8% de la varianza explicada.
+
+Esto indica que las variaciones a cada lado del sistema montañoso no están correlacionadas, dejando en claro el efecto que tiene la topografía en la variabilidad de la precipitación en cada una de las vertientes de Costa Rica (Fernández et al., 1996). Este trabajo ilustra el uso de técnicas de análisis multivariado en la estudio del comportamiento de la lluvia en Costa Rica.  
+
+
+### Bibliografía
+
+Alfaro, E. (2002). Some Characteristics of the Annual Precipitation Cycle in Central America and their Relationships with its Surrounding Tropical Oceans. Top. Meteor. y Ocean., 9(2), 88-103.
+
+Amat, Rodrigo. *Análisis de Componentes Principales (Principal Component Analysis, PCA) y t-SNE*. Recuperado de https://rpubs.com/Joaquin_AR/287787
+
+Awange, J.L., Hu, K.X., Khaki, M. (2019). The newly merged satellite remotely sensed, gauge and reanalysis-based Multi-Source Weighted-Ensemble Precipitation: Evaluation over Australia and Africa (1981–2016). Science of The Total Environment, 670, 448-465. ISSN 0048-9697. Recuperado de: https://www.sciencedirect.com/science/article/pii/S0048969719311301
+
+Fernández, W., Chacón, R., & Melgarejo, J. W. (1996). On the rainfall distribution with altitude over Costa Rica. Revista Geofísica, 44, 57 – 72.
+
+Funk C., Peterson P., Landsfeld M. 2015. The climate hazards infrared precipitation with stations: a new environmental record for monitoring extremes. Sci data 2:150066. Doi: https://doi.org/10.1038/sdata.2015.66
+
+Li W., Zhang P., Ye J. (2011). Impact of two diferent types of El Niño events on the Amazon climate and ecosystem productivity. J Plant Ecol 4, 91–99. Doi: https://doi.org/10.1093/jpe/rtq039
+
+Li J., Carlson B.E., Lacis A.A. (2013). Application of spectral analysis techniques in the intercomparison of aerosol data: 1. An EOF approach to analyze the spatial-temporal variability of aerosol optical depth using multiple remote sensing data sets. J Geophys Res Atmos 118:8640–8648. Doi: https://doi.org/10.1002/jgrd.50686
+
+Ocampo-Marulanda, C., Fernández-Álvarez, C., Cerón, W., Canchala, T., Carvajal-Escobar, Y., Morales, W. (2022). A spatiotemporal assessment of the high-resolution CHIRPS rainfall dataset in southwestern Colombia using combined principal component analysis. Ain Shams Engineering Journal, 13(5), 2090-447. Doi: https://doi.org/10.1016/j.asej.2022.101739
+
+Organización Meteológica Mundial. (1989). Calculation of monthly and annual 30-year standard normals prepared by a meeting of experts, Washington, DC, USA, Marzo de 1989. Organización Meteológica Mundial, WCDP N 10, OMM, Ginebra.
+
+Rivera JA., Marianetti G. (2018). Validation of CHIRPS precipitation dataset along the Central Andes of Argentina. Atmos Res, 213, 437–449. Doi: https://doi.org/10.1016/j.atmosres.2018.06.023
+
+Satgé F., Ruelland D., Bonnet M. (2019). Consistency of satellite precipitation estimates in space and over time compared with gauge observations and snow-hydrological modelling in the Lake Titicaca region. Hydrol. Earth Syst. Sci., 23, 595–619. Doi: https://doi.org/10.5194/hess-23-595-2019
+  
+Waylen, P. R., Caviedes, C. N., & Quesada, M. E. (1996). Interannual variability of monthly precipitation in Costa Rica. Journal of Climate, 9, 2606 – 2613
+
+Wilks, D.S. (2006). Statistical methods in the atmospheric sciences: An introduction. Segunda Edición. Academic Press. San Diego
+
+
+
+

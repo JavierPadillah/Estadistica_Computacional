@@ -1,0 +1,3 @@
+CHIRPS: Rainfall Estimates from Rain Gauge and Satellite Observations
+
+Download raw data: https://www.chc.ucsb.edu/data/chirps
